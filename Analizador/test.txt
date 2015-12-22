@@ -1,0 +1,6 @@
+BOOL : muerte = 0;
+INT : vida = 0;
+FLOAT : yo =0;
+INT : enete = 0;
+STRING : lll[] = 0;
+CHAR : eee = 0;

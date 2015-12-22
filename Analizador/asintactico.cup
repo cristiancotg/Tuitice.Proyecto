@@ -1,0 +1,270 @@
+/* ----------ANALIZADOR SINTACTICO--------------------*/
+
+package ejemplocup;
+/* Import the class java_cup.runtime.*  */
+import java_cup.runtime.*;
+import java.io.FileReader;
+import java.util.*;
+   
+   action code {:
+   /*ASOCIACION DE METODOS Y ATRIBUTOS LLAMADOS*/
+   :}
+   
+/*CODIGO PARSER, COPIAMOS TODO A LA CLASE FINAL */
+	
+	
+parser code {:
+    
+    /* ERRORES ENCONTRADOS*/
+    
+    public void report_error(String message, Object info) {
+        StringBuilder m = new StringBuilder("Error");
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            if (s.left >= 0) {                
+                m.append(" in line "+(s.left+1));
+                if (s.right >= 0)
+                    m.append(", column "+(s.right+1));
+            }
+        }
+        m.append(" : "+message);
+        System.err.println(m);
+    }
+	
+   
+    /*SISTEMA DE ERRORES FATALES, DAR FIN A ERROR*/
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        System.exit(1);
+    }
+
+    /*MAIN PARA EJECUTAR EL ANALIZADOR LEXICO Y SINTACTICO*/
+	   
+    public static void main(String[] args){
+        try {
+            AnalizadorSintactico asin = new AnalizadorSintactico(
+                    new AnalizadorLexico( new FileReader(args[0])));
+					//System.out.println( "-------------->>>>>>>>>>>>>>>>>>>>>>>"+args[0]);
+					
+            Object result = asin.parse().value;
+            System.out.println("\n------Fin-----");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+:};
+   
+
+   
+/* ------------DECLARACION: TERMINALES Y NO TERMINALES---------- */
+   
+/* QUE SON TERMINALES: SON TOKENS OBTENIDOS POR EL ANALIZADOR LEXICO   */
+
+
+terminal           SEMI, OP_SUMA, OP_RESTA, OP_MULT, PARENIZQ, PARENDER ,INT, FLOAT, INICIO, FIN , CHAR ,BOOL ,STRING, DOSPUNTOS,IGUAL, INCREMENTO;
+terminal           CERO, corchDER, corchIZQ;
+terminal Integer   ENTERO;
+terminal Object IDENTIFICADOR;
+
+//non terminal  programa, sent, sentencia,variablesGlobales, CuerpoPrograma, variableGlobal,tipoVarLocal,declaraciones, usovariables;
+non terminal  Object  programa, sent, sentencia,variablesGlobales, CuerpoPrograma, variableGlobal,tipoVarLocal, usovariables;
+non terminal Object declaracionVariablesGlobales, conjuntoFunciones, variableGlobalInicio, tipovariable, variableGlobalVector ;
+//non terminal Object     IDENTIFICADOR;
+
+
+   
+/* TERMINALES QUE SE LISTAN EN LA SECCION GRAMATICAL */
+//non terminal Object     expr_list, expr_part;
+//non terminal Integer    expr, factor, termino;
+
+
+
+   
+
+/* ----------PROCEDENCIA Y ASOCIACION DE TERMINALES----------- */
+   
+
+  /*precedence left OP_SUMA, OP_RESTA; 
+  precedence left OP_MULT;*/
+
+
+/* ----------------GRAMATICA----------------------- */
+   
+/* 
+   
+   expr_list ::=   expr_list expr_part
+                 | expr_part
+   expr_part ::=   expr SEMI
+   expr      ::=   expr PLUS factor
+                 | expr MINUS factor
+                 | factor
+   factor    ::=   factor TIMES term
+                 | factor DIVIDE term
+                 | term
+   term     ::=    LPAREN expr RPAREN
+                 | NUMBER
+                 | ID     
+*/
+   
+/* 'expr_list' es la raiz de la gramatica. Una 'expr_list' puede ser una 'expr_list'
+   seguida de una expr_part, o puede ser una expr_part.
+   Un terminal o no terminal se define <termino> ::= termino1 termino2 ... terminoN.;
+   donde termino puede ser terminal o no terminal, solo se permite un simbolo a la
+   izquierda. La | sirve para indicar que es una produccion u otra.
+   Debemos pasar de simbolos no terminales a simbolos terminales. Una gramatica que no
+   termina en simbolos terminales se dice que no reduce, y por lo tanto nunca se finaliza
+   su procesado.
+*/
+/*copiado del otro programa */   
+
+
+//GRAMATICA E INICIALIZACION DE VARIABLES GLOBALES
+start with programa;
+
+programa ::= declaracionVariablesGlobales conjuntoFunciones
+            | declaracionVariablesGlobales
+			| conjuntoFunciones
+;
+
+declaracionVariablesGlobales ::=  declaracionVariablesGlobales variableGlobalInicio
+                                 |variableGlobalInicio
+                                 |declaracionVariablesGlobales variableGlobalVector  
+                                 |variableGlobalVector
+;
+
+variableGlobalInicio  ::= tipovariable DOSPUNTOS IDENTIFICADOR IGUAL CERO SEMI
+                     
+;
+
+variableGlobalVector ::=  tipovariable DOSPUNTOS IDENTIFICADOR corchIZQ corchDER IGUAL CERO SEMI
+
+;
+
+tipovariable ::=  INT
+                |FLOAT
+				|CHAR 
+				|BOOL
+				|STRING
+
+;					
+
+
+
+/*
+programa ::= declaraciones
+;
+
+declaraciones ::= tipovariable
+;
+
+
+
+tipovariable ::=  INT
+                |FLOAT
+				|CHAR 
+				|BOOL
+				|STRING
+
+;
+
+
+*/
+/*
+//ESTRUCTURA
+programa ::= INICIO sent FIN
+;
+   //INSTRUCCIONES
+
+sent ::= sentencia
+       | 
+;
+
+sentecia ::= variablesGlobales CuerpoPrograma
+             |variablesGlobales
+             |CuerpoPrograma	
+;			 
+
+variablesGlobales ::= variablesGlobales variableGlobal
+                    |variableGlobal
+					;
+
+					
+variableGlobal ::= tipoVarLocal DOSPUNTOS IDENTIFICADOR  IGUAL  SEMI;
+
+tipoVarLocal ::= INTT
+                |FLOAT 
+				|CHAR 
+				|BOOL 
+				|STRING
+;
+
+*/
+
+
+
+ 
+   
+   
+   /*
+   
+    expr_list ::= expr_list expr_part
+                  |
+                  expr_part
+                  ;
+				  
+//'expr_part' se compone de una expr seguida de SEMI, o de una asign seguida de SEMI.
+  // asign:a esta estableciendo que a representa al objeto asociado a asign, entre {: :}
+  // se coloca el sodigo en java para las acciones a tomar al cumplirse una produccion.
+   
+   expr_part ::= expr:e
+                  {:
+                    System.out.println(" = " + e); 
+                  :} 
+                  SEMI
+                 ;
+                  
+// 'expr' puede ser una expresion que inicia por numero entero op_suma expr,
+//  de esa forma se realiza una suma. Tambien puede ser un numero entero, con esto
+//  se devuelve el valor del entero. En RESULT se almacena el valor de las acciones,
+//  y se pasa al siguiente nivel de la gramatica.
+             
+
+   expr      ::=  expr:e OP_SUMA factor:f
+                  {:
+                    RESULT = new Integer(e.intValue() + f.intValue());
+                  :}
+                  |
+                  expr:e OP_RESTA factor:f
+                  {:
+                    RESULT = new Integer(e.intValue() - f.intValue());
+                  :}
+                  |
+                  factor:n
+                  {:
+                    RESULT = n; 
+                  :}
+                  ;
+
+factor        ::=  factor:f OP_MULT termino:e
+                  {:
+                    RESULT = new Integer(f.intValue() * e.intValue());
+                  :}
+                  |
+                  termino:t
+                  {:
+                    RESULT = t;
+                  :}
+                  ;
+
+termino       ::=  PARENIZQ expr:e PARENDER
+                  {:
+                    RESULT = e;
+                  :}
+                  |
+                  ENTERO:e
+                  {:
+                    RESULT = e;
+                  :}
+                  ; 
+				  
+	*/
